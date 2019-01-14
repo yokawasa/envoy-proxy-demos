@@ -62,14 +62,17 @@ Key definition 2 - `clusters` in [front-envoy.yaml](front-envoy.yaml)
 
 ## Getting Started
 ```sh
-git clone https://github.com/yokawasa/envoy-proxy-demos.git
-cd envoy-proxy-demos/httproute-header-match
+$ git clone https://github.com/yokawasa/envoy-proxy-demos.git
+$ cd envoy-proxy-demos/httproute-header-match
 ```
+
 > [NOTICE] Before you run this demo, make sure that all demo containers in previous demo are stopped!
 
 ## Run the Demo
+
+### Build and Run containers
+
 ```sh
-# Build and Run containers using docker-compose
 $ docker-compose up --build -d
 
 # check all services are up
@@ -92,19 +95,28 @@ httproute-header-match_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up    
 
 ```
 
-Access each services
+### Access each services
+
+Access serivce_blue and check if blue background page is displayed
+
 ```sh
-# Access serivce_blue and check if blue background page is displayed
-$ curl -s http://localhost:8000/service/blue
+$ curl -s -v http://localhost:8000/service/blue
+```
 
-# Access serivce_blue with Headers `x-canary-version: service_green`and check if green background page (service_green) is displayed
-curl -s -H 'x-canary-version: service_green' http://localhost:8000/service/blue
+Access serivce_blue with Headers `x-canary-version: service_green`and check if green background page (service_green) is displayed
 
-# Access serivce_red and check if red background page is displayed
-curl -s http://localhost:8000/service/red
+```sh
+$ curl -s -H 'x-canary-version: service_green' http://localhost:8000/service/blue
+```
+
+Access serivce_red and check if red background page is displayed
+
+```sh
+$ curl -s -v http://localhost:8000/service/red
 ```
 
 ## Stop & Cleanup
+
 ```sh
 $ docker-compose down --remove-orphans --rmi all
 ```

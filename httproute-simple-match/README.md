@@ -63,15 +63,17 @@ Key definition 2 - `clusters` in [front-envoy.yaml](front-envoy.yaml)
 
 ## Getting Started
 ```sh
-git clone https://github.com/yokawasa/envoy-proxy-demos.git
-cd envoy-proxy-demos/httproute-simple-match
+$ git clone https://github.com/yokawasa/envoy-proxy-demos.git
+$ cd envoy-proxy-demos/httproute-simple-match
 ```
 
 > [NOTICE] Before you run this demo, make sure that all demo containers in previous demo are stopped!
 
 ## Run the Demo
+
+### Build and Run containers
+
 ```sh
-# Build and Run containers using docker-compose
 $ docker-compose up --build -d
 
 # check all services are up
@@ -91,29 +93,35 @@ httproute-simple-match_front-envoy_1     /usr/bin/dumb-init -- /bin ...   Up    
 httproute-simple-match_service_blue_1    /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
 httproute-simple-match_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
 httproute-simple-match_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
-[yoichika httproute-simple-match (master ✗)]$
-
 ```
 
-Access each services
+### Access each services
+
+Access serivce_blue and check if blue background page is displayed
+
 ```sh
-# Access serivce_blue and check if blue background page is displayed
 $ open http://localhost:8000/service/blue
 # or
 $ curl -s -v http://localhost:8000/service/blue
+```
 
-# Access serivce_gree and check if gree background page is displayed
+Access serivce_gree and check if gree background page is displayed
+
+```sh
 $ open http://localhost:8000/service/green
-# or 
+# or
 $ curl -s -v http://localhost:8000/service/green
+```
 
-# Access serivce_red and check if red background page is displayed
+Access serivce_red and check if red background page is displayed
+```sh
 $ open http://localhost:8000/service/green
-# or 
+# or
 $ curl -s -v http://localhost:8000/service/red
 ```
 
 ## Stop & Cleanup
+
 ```sh
 $ docker-compose down --remove-orphans --rmi all
 ```

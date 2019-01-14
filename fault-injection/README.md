@@ -39,14 +39,17 @@ Key definition 2 - `http_filters` in [service-envoy-fault-injection-delay.yaml](
 
 ## Getting Started
 ```sh
-git clone https://github.com/yokawasa/envoy-proxy-demos.git
-cd envoy-proxy-demos/fault-injection
+$ git clone https://github.com/yokawasa/envoy-proxy-demos.git
+$ cd envoy-proxy-demos/fault-injection
 ```
+
 > [NOTICE] Before you run this demo, make sure that all demo containers in previous demo are stopped!
 
 ## Run the Demo
+
+### Build and Run containers using docker-compose
+
 ```sh
-# Build and Run containers using docker-compose
 $ docker-compose up --build -d
 
 # check all services are up
@@ -68,10 +71,10 @@ fault-injection_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up      10000
 fault-injection_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
 ```
 
-Access and test each services
+### Access and test each services
+Access serivce_blue and check if 50% of requests to service_blue are 10 seconds delayed. The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/blue).
+
 ```sh
-# Access serivce_blue and check if 50% of requests to service_blue are 10 seconds delayed  
-# The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/blue)
 $ ../helpers/send-requests.sh http://localhost:8000/service/blue 10
 
 Sending GET request: http://localhost:8000/service/blue
@@ -79,9 +82,11 @@ Sending GET request: http://localhost:8000/service/blue
 Sending GET request: http://localhost:8000/service/blue
 200
 ..
+```
 
-# Access serivce_red and check if 50% of requests to service_red are aborted with 503 HTTP status code  
-# The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/red)
+Access serivce_red and check if 50% of requests to service_red are aborted with 503 HTTP status code. The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/red).
+
+```sh
 $ ../helpers/send-requests.sh http://localhost:8000/service/red 10
 
 Sending GET request: http://localhost:8000/service/red
@@ -93,6 +98,7 @@ Sending GET request: http://localhost:8000/service/red
 ```
 
 ## Stop & Cleanup
+
 ```sh
 $ docker-compose down --remove-orphans --rmi all
 ```

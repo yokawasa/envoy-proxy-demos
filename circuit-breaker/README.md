@@ -31,14 +31,16 @@ Key definition  - `clusters` in [service-envoy-circuitbreaker.yaml](service-envo
 
 ## Getting Started
 ```sh
-git clone https://github.com/yokawasa/envoy-proxy-demos.git
-cd envoy-proxy-demos/circuit-breaker
+$ git clone https://github.com/yokawasa/envoy-proxy-demos.git
+$ cd envoy-proxy-demos/circuit-breaker
 ```
 > [NOTICE] Before you run this demo, make sure that all demo containers in previous demo are stopped!
 
 ## Run the Demo
+
+### Build and Run containers
+
 ```sh
-# Build and Run containers using docker-compose
 $ docker-compose up --build -d
 
 # check all services are up
@@ -57,22 +59,29 @@ circuit-breaker_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up      10000
 circuit-breaker_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
 ```
 
-Access and test each services
+### Access and test each services
+
+Access serivce_blue and check if green background page is displayed. It is expected that nothting special will occur.
+
 ```sh
-# Access serivce_blue and check if green background page is displayed.
-# It is expected that nothting special will occur
 $ curl -s http://localhost:8000/service/green
+```
 
-# Try paralell access to service_green
-# It is expected that nothting special will occur
-# The following helper command allow you to send parallel requests repeatedly (For example, send 5 parallel requests to http://localhost:8000/service/green, each thread make 30 consequent requests)
+Try paralell access to service_green. It is expected that nothting special will occur. The following helper command allow you to send parallel requests repeatedly (For example, send 5 parallel requests to http://localhost:8000/service/green, each thread make 30 consequent requests).
+
+```sh
 $ ../helpers/parallel-requests.sh http://localhost:8000/service/green 5
+```
 
+Make at least 5 parallel requests to service_red in order to trigger circit breaker and see a few of requests receive 503 HTTP status code.
 
-# Make at least 5 parallel requests to service_red in order to trigger circit breaker and see a few of requests receive 503 HTTP status code.
+```sh
 $ ../helpers/parallel-requests.sh http://localhost:8000/service/red 5
+```
 
-# or more exlude 200 status code to identify 503 status code easily like this:
+To make it more conveniently, exclude 200 status code to identify 503 status code easily like this:
+
+```sh
 $ ../helpers/parallel-requests.sh http://localhost:8000/service/red 5 | grep -v 200
 
 Parallel# 1

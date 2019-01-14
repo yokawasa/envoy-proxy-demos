@@ -46,8 +46,10 @@ cd envoy-proxy-demos/timeouts-retries
 > [NOTICE] Before you run this demo, make sure that all demo containers in previous demo are stopped!
 
 ## Run the Demo
+
+### Build and Run containers
+
 ```sh
-# Build and Run containers using docker-compose
 $ docker-compose up --build -d
 
 # check all services are up
@@ -69,10 +71,11 @@ timeouts-retries_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up      1000
 timeouts-retries_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
 ```
 
-Access each services
+### Access each services
+
+Access serivce_blue and check if 50% of requests to service_blue are timeout error (over 5 seconds timeout error with 504 status code). The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/blue).
+
 ```sh
-# Access serivce_blue and check if 50% of requests to service_blue are timeout error (over 5 seconds timeout error with 504 status code). 
-# The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/blue)
 $ ../helpers/send-requests.sh http://localhost:8000/service/blue 10
 
 Sending GET request: http://localhost:8000/service/blue
@@ -85,15 +88,17 @@ Sending GET request: http://localhost:8000/service/blue
 200
 Sending GET request: http://localhost:8000/service/blue
 200
+```
 
+Access serivce_blue and check if green background page is displayed. It is expected that nothting special will occur
 
-# Access serivce_blue and check if green background page is displayed.
-# It is expected that nothting special will occur
+```sh
 $ curl -s http://localhost:8000/service/green
+```
 
+Access serivce_red and check if most of requests to service_red are ok (200 status code), but seldomly you'll get abort error (503 status code). To explain what happens behind the senene, 50% of requests to  `service_red` will be aborted with 503 error code due to the fault injection config in service_red, however the request will be recovered by the front proxy's retry mechanism, which is why most of the requests to service_red tuned out to be ok (200 status code). The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/blue)
 
-# Access serivce_red and check if most of requests to service_red are ok (200 status code), but seldomly you'll get abort error (503 status code). To explain what happens behind the senene, 50% of requests to  `service_red` will be aborted with 503 error code due to the fault injection config in service_red, however the request will be recovered by the front proxy's retry mechanism, which is why most of the requests to service_red tuned out to be ok (200 status code).
-# The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/blue)
+```sh
 $ ../helpers/send-requests.sh http://localhost:8000/service/red 10
 
 Sending GET request: http://localhost:8000/service/red
@@ -119,6 +124,7 @@ Sending GET request: http://localhost:8000/service/red
 ```
 
 ## Stop & Cleanup
+
 ```sh
 $ docker-compose down --remove-orphans --rmi all
 ```

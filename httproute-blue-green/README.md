@@ -60,15 +60,17 @@ Key definition 2 - `clusters` in [front-envoy.yaml](front-envoy.yaml)
 
 ## Getting Started
 ```sh
-git clone https://github.com/yokawasa/envoy-proxy-demos.git
-cd envoy-proxy-demos/httproute-blue-green
+$ git clone https://github.com/yokawasa/envoy-proxy-demos.git
+$ cd envoy-proxy-demos/httproute-blue-green
 ```
 
 > [NOTICE] Before you run this demo, make sure that all demo containers in previous demo are stopped!
 
 ## Run the Demo
+
+### Build and Run containers
+
 ```sh
-# Build and Run containers using docker-compose
 $ docker-compose up --build -d
 
 # check all services are up
@@ -90,13 +92,16 @@ httproute-blue-green_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up      
 httproute-blue-green_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
 ```
 
-Access each services
-```sh
-# Access serivce_blue and check if blue background page is displayed with 90% possibility and green background page is displayed with 10% possibility
-$ curl -s http://localhost:8000/service/blue
+### Access each services
 
-# Access serivce_red and check if red background page is displayed
-curl -s http://localhost:8000/service/red
+Access serivce_blue and check if blue background page is displayed with 90% possibility and green background page is displayed with 10% possibility
+```sh
+$ curl -s -v http://localhost:8000/service/blue
+```
+
+Access serivce_red and check if red background page is displayed
+```
+$ curl -s -v http://localhost:8000/service/red
 ```
 
 ## Stop & Cleanup
