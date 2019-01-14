@@ -2,7 +2,7 @@
 
 ## Demo Overview
 
-![](../assets/emo-httproute-blue-green.png)
+![](../assets/demo-httproute-blue-green.png)
 
 Key definition 1 - `virtual_hosts` in [front-envoy.yaml](front-envoy.yaml)
 ```yaml
