@@ -13,7 +13,7 @@ Set of demos to demonstrate [Envoy Proxy](https://www.envoyproxy.io/) features
 - [HTTP Routing: Blue Green Traffic Splitting](httproute-blue-green)
 - [Fault Injection](fault-injection)
 - [Circuit Breaker](circuit-breaker)
-- [Timeouts and Retries](timeouts-retries)
+- [Timeouts and Retries (+ Fault Injections)](timeouts-retries)
 
 ## Contributing
 
