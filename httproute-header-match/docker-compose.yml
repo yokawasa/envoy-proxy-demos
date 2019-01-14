@@ -3,14 +3,11 @@ services:
 
   front-envoy:
     build:
-      context: .
-      # Build a container using the Dockerfile-frontenvoy file located in the current directory
+      context: ../apps
       dockerfile: Dockerfile-frontenvoy
     volumes:
-      # Mount the front-envoy.yaml file in this directory as /etc/front-envoy.yaml
       - ./front-envoy.yaml:/etc/front-envoy.yaml
     networks:
-      # Create and use a Docker network named “envoymesh” for this container
       - envoymesh
     expose:
       # Expose ports 80 (for general traffic) and 8001 (for the admin server)
@@ -23,7 +20,7 @@ services:
 
   service_blue:
     build:
-      context: .
+      context: ../apps
       dockerfile: Dockerfile-service
     volumes:
       - ./service-envoy.yaml:/etc/service-envoy.yaml
@@ -37,7 +34,7 @@ services:
       - "80"
   service_green:
     build:
-      context: .
+      context: ../apps
       dockerfile: Dockerfile-service
     volumes:
       - ./service-envoy.yaml:/etc/service-envoy.yaml
@@ -51,7 +48,7 @@ services:
       - "80"
   service_red:
     build:
-      context: .
+      context: ../apps
       dockerfile: Dockerfile-service
     volumes:
       - ./service-envoy.yaml:/etc/service-envoy.yaml

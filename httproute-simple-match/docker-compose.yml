@@ -1,0 +1,63 @@
+version: '2'
+services:
+
+  front-envoy:
+    build:
+      context: ../apps
+      dockerfile: Dockerfile-frontenvoy
+    volumes:
+      - ./front-envoy.yaml:/etc/front-envoy.yaml
+    networks:
+      - envoymesh
+    expose:
+      # Expose ports 80 (for general traffic) and 8001 (for the admin server)
+      - "80"
+      - "8001"
+    ports:
+      - "8000:80"
+      - "8001:8001"
+
+  service_blue:
+    build:
+      context: ../apps
+      dockerfile: Dockerfile-service
+    volumes:
+      - ./service-envoy.yaml:/etc/service-envoy.yaml
+    networks:
+      envoymesh:
+        aliases:
+          - service_blue
+    environment:
+      - SERVICE_NAME=blue
+    expose:
+      - "80"
+  service_green:
+    build:
+      context: ../apps
+      dockerfile: Dockerfile-service
+    volumes:
+      - ./service-envoy.yaml:/etc/service-envoy.yaml
+    networks:
+      envoymesh:
+        aliases:
+          - service_green
+    environment:
+      - SERVICE_NAME=green
+    expose:
+      - "80"
+  service_red:
+    build:
+      context: ../apps
+      dockerfile: Dockerfile-service
+    volumes:
+      - ./service-envoy.yaml:/etc/service-envoy.yaml
+    networks:
+      envoymesh:
+        aliases:
+          - service_red
+    environment:
+      - SERVICE_NAME=red
+    expose:
+      - "80"
+networks:
+  envoymesh: {}

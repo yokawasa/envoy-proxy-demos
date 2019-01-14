@@ -16,7 +16,7 @@ static_resources:
           route_config:
             name: local_route
             # Virtual host configures to accept traffic for all domains.
-            # With Routes, mapping traffic for /service/1 and /service/2 to the appropriate clusters.
+            # With Routes, mapping traffic for /service/blue, /service/green, and /service/red to the appropriate clusters.
             virtual_hosts:
             - name: backend
               domains:
@@ -25,12 +25,11 @@ static_resources:
               - match:
                   prefix: "/service/blue"
                 route:
-                  weighted_clusters:
-                    clusters:
-                    - name: service_green
-                      weight: 10
-                    - name: service_blue
-                      weight: 90
+                  cluster: service_blue
+              - match:
+                  prefix: "/service/green"
+                route:
+                  cluster: service_green
               - match:
                   prefix: "/service/red"
                 route:

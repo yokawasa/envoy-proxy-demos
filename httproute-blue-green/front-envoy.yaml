@@ -1,12 +1,9 @@
-# The static_resources block contains definitions for clusters and listeners that aren’t dynamically managed
 static_resources:
   listeners:
-  # Listener configured to listen on port 80
   - address:
       socket_address:
         address: 0.0.0.0
         port_value: 80
-    # Listner's filter chain is configured that Envoy to manage HTTP traffic.
     filter_chains:
     - filters:
       - name: envoy.http_connection_manager
@@ -15,8 +12,6 @@ static_resources:
           stat_prefix: ingress_http
           route_config:
             name: local_route
-            # Virtual host configures to accept traffic for all domains.
-            # With Routes, mapping traffic for /service/1 and /service/2 to the appropriate clusters.
             virtual_hosts:
             - name: backend
               domains:
@@ -24,15 +19,13 @@ static_resources:
               routes:
               - match:
                   prefix: "/service/blue"
-                  headers:
-                    - name: "x-canary-version"
-                      exact_match: "service_green"
                 route:
-                  cluster: service_green
-              - match:
-                  prefix: "/service/blue"
-                route:
-                  cluster: service_blue
+                  weighted_clusters:
+                    clusters:
+                    - name: service_green
+                      weight: 10
+                    - name: service_blue
+                      weight: 90
               - match:
                   prefix: "/service/red"
                 route:
@@ -40,11 +33,6 @@ static_resources:
           http_filters:
           - name: envoy.router
             config: {}
-  # Static Clouster configurations:
-  # You can configure timeouts, circuit breakers, discovery settings, and more on clusters
-  # Clusters are composed of endpoints – a set of network locations that can serve requests for the cluster. 
-  # In this example, endpoints are canonically defined in DNS, which Envoy can read from. 
-  # Endpoints can also be defined directly as socket addresses, or read dynamically via the Endpoint Discovery Service.
   clusters:
   - name: service_blue
     connect_timeout: 0.25s
@@ -75,7 +63,6 @@ static_resources:
         port_value: 80
 admin:
   access_log_path: "/dev/null"
-  # The address object tells Envoy to create an admin server listening on port 8001.
   address:
     socket_address:
       address: 0.0.0.0
