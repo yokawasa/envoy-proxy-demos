@@ -22,8 +22,7 @@ TRACE_HEADERS_TO_PROPAGATE = [
     "uber-trace-id"
 ]
 
-@app.route('/service/<service_color>')
-def hello(service_color):
+def render_page():
     return ('<body bgcolor="{}"><span style="color:white;font-size:4em;">\n'
             'Hello from {} (hostname: {} resolvedhostname:{})\n</span></body>\n'.format(
                     os.environ['SERVICE_NAME'],
@@ -31,19 +30,27 @@ def hello(service_color):
                     socket.gethostname(),
                     socket.gethostbyname(socket.gethostname())))
 
+@app.route('/service/<service_color>')
+def service(service_color):
+    return render_page()
+
 @app.route('/trace/<service_color>')
 def trace(service_color):
     headers = {}
-    # call service red from service blue
-    if int(os.environ['SERVICE_NAME']) == 1 :
+    ## For Propagation test ##
+    # Call service 'green' from service 'blue'
+    if (os.environ['SERVICE_NAME']) == 'blue':
+        for header in TRACE_HEADERS_TO_PROPAGATE:
+            if header in request.headers:
+                headers[header] = request.headers[header]
+        ret = requests.get("http://localhost:9000/trace/green", headers=headers)
+    # Call service 'red' from service 'green'
+    elif (os.environ['SERVICE_NAME']) == 'green':
         for header in TRACE_HEADERS_TO_PROPAGATE:
             if header in request.headers:
                 headers[header] = request.headers[header]
         ret = requests.get("http://localhost:9000/trace/red", headers=headers)
-    return ('Hello from behind Envoy (service {})! hostname: {} resolved'
-            'hostname: {}\n'.format(os.environ['SERVICE_NAME'], 
-                                    socket.gethostname(),
-                                    socket.gethostbyname(socket.gethostname())))
+    return render_page()
 
 if __name__ == "__main__":
     app.run(host='127.0.0.1', port=8080, debug=True)
