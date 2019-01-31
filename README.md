@@ -14,6 +14,8 @@ Set of demos to demonstrate [Envoy Proxy](https://www.envoyproxy.io/) features
 - [Fault Injection](fault-injection)
 - [Circuit Breaker](circuit-breaker)
 - [Timeouts and Retries (+ Fault Injections)](timeouts-retries)
+- [Jaeger Tracing](jaeger-tracing)
+
 
 ## Contributing
 
