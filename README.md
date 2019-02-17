@@ -3,6 +3,8 @@ Set of demos to demonstrate [Envoy Proxy](https://www.envoyproxy.io/) features
 
 ![](assets/demo-app-arch.png)
 
+This project is a fork of the [Envoy's example demo sets](https://github.com/envoyproxy/envoy/tree/master/examples)
+
 ## Pre-requisites
 - `docker daemon`: You need to have access to a docker daemon to run the demos
 - `cURL` : You need cURL to test the demos
@@ -15,7 +17,6 @@ Set of demos to demonstrate [Envoy Proxy](https://www.envoyproxy.io/) features
 - [Circuit Breaker](circuit-breaker)
 - [Timeouts and Retries (+ Fault Injections)](timeouts-retries)
 - [Jaeger Tracing](jaeger-tracing)
-
 
 ## Contributing
 
