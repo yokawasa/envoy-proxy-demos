@@ -204,7 +204,7 @@ $ open http://localhost:16686
 
 ![](../assets/jaeger-ui.png)
 
-You'll come up with Jager UI, then search each traces. Here are example trace results:
+You'll come up with Jager UI page like above, then search each traces. Here are example tracing results in Jaeger UI:
 
 ![](../assets/jaeger-ui-servide-blue.png)
 

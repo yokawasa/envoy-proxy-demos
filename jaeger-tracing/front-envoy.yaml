@@ -63,7 +63,6 @@ static_resources:
     - socket_address:
         address: service_red
         port_value: 80
-  # Jaeger Dashboard
   - name: jaeger
     connect_timeout: 1s
     type: strict_dns
