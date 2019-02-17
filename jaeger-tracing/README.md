@@ -196,7 +196,15 @@ $ curl -s -v http://localhost:8000/trace/green
 $ curl -s -v http://localhost:8000/trace/red
 ```
 
-Actually trace data would automatically have been generated and pushed to Jaeger via Envoy. Then check the Jaeger UI to ses how the Jaeger visualize all the trace data collected.  
+Actually trace data would automatically have been generated and pushed to Jaeger via Envoy. Then check the Jaeger UI to ses how the Jaeger visualize all the trace data collected. Here is a Jaeger UI url:
+
+```
+$ open http://localhost:16686
+```
+
+![](../assets/jaeger-ui.png)
+
+You'll come up with Jager UI, then search each traces. Here are example trace results:
 
 ![](../assets/jaeger-ui-servide-blue.png)
 
