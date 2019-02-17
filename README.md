@@ -17,6 +17,7 @@ This project is a fork of the [Envoy's example demo sets](https://github.com/env
 - [Circuit Breaker](circuit-breaker)
 - [Timeouts and Retries (+ Fault Injections)](timeouts-retries)
 - [Jaeger Tracing](jaeger-tracing)
+- [Zipkin Tracing](zipkin-tracing)
 
 ## Contributing
 
