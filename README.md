@@ -19,6 +19,10 @@ This project is a fork of the [Envoy's example demo sets](https://github.com/env
 - [Jaeger Tracing](jaeger-tracing)
 - [Zipkin Tracing](zipkin-tracing)
 
+## Demo versions and supported envoy versions
+- v2.0.0 (WIP):  envoy api V2 based demo apps
+- v1.0.0: envoy api v1 based demo apps
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/yokawasa/envoy-proxy-demos
