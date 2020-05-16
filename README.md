@@ -21,7 +21,7 @@ This project is a fork of the [Envoy's example demo sets](https://github.com/env
 
 ## Demo versions and supported envoy versions
 - v2.0.0 (WIP):  envoy api V2 based demo apps
-- v1.0.0: envoy api v1 based demo apps
+- [v1.0.0](https://github.com/yokawasa/envoy-proxy-demos/releases/tag/v1.0.0): envoy api v1 based demo apps
 
 ## Contributing
 
