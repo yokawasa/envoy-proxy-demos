@@ -1,6 +1,6 @@
 # Circuit Breaker
 
-[Circuit Breaking](https://www.envoyproxy.io/learn/circuit-breaking) lets you configure failure thresholds that ensure safe maximums after which these requests stop. This allows for a more graceful failure, and time to respond to potential issues before they become larger.
+[Circuit Breaking](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking) lets you configure failure thresholds that ensure safe maximums after which these requests stop. This allows for a more graceful failure, and time to respond to potential issues before they become larger.
 
 ## Demo Overview
 
@@ -27,7 +27,7 @@ Key definition  - `clusters` in [service-envoy-circuitbreaker.yaml](service-envo
         address: 127.0.0.1
         port_value: 8080
 ```
-> For the detail of `circuit_breakers` configuration, see [cluster.CircuitBreakers](https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/cluster/circuit_breaker.proto#envoy-api-msg-cluster-circuitbreakers)
+> For the detail of `circuit_breakers` configuration, see [configuration example](https://www.envoyproxy.io/docs/envoy/latest/configuration/upstream/cluster_manager/cluster_circuit_breakers#config-cluster-manager-cluster-circuit-breakers) and API reference, [cluster.CircuitBreakers](https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/cluster/circuit_breaker.proto#envoy-api-msg-cluster-circuitbreakers)
 
 ## Getting Started
 ```sh
