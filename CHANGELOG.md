@@ -2,6 +2,8 @@
 
 ## v2.0.0 (envoy api v2 based demo apps)
 
+Supported Envoy v2 API
+
 Prominent changes from v1 based demo app are:
 
 - Changed general port for front proxy from 80 to 8000
