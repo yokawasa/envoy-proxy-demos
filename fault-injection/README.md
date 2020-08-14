@@ -40,8 +40,8 @@ Key definition 2 - `http_filters` in [service-envoy-fault-injection-delay.yaml](
 
 ## Getting Started
 ```sh
-$ git clone https://github.com/yokawasa/envoy-proxy-demos.git
-$ cd envoy-proxy-demos/fault-injection
+git clone https://github.com/yokawasa/envoy-proxy-demos.git
+cd envoy-proxy-demos/fault-injection
 ```
 
 > [NOTICE] Before you run this demo, make sure that all demo containers in previous demo are stopped!
@@ -51,10 +51,10 @@ $ cd envoy-proxy-demos/fault-injection
 ### Build and Run containers using docker-compose
 
 ```sh
-$ docker-compose up --build -d
+docker-compose up --build -d
 
 # check all services are up
-$ docker-compose ps --service
+docker-compose ps --service
 
 front-envoy
 service_blue
@@ -62,7 +62,7 @@ service_green
 service_red
 
 # List containers
-$ docker-compose ps
+docker-compose ps
 
              Name                            Command               State                            Ports
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ fault-injection_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000
 Access serivce_blue and check if 50% of requests to service_blue are 10 seconds delayed. The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/blue).
 
 ```sh
-$ ../helpers/send-requests.sh http://localhost:8000/service/blue 10
+../helpers/send-requests.sh http://localhost:8000/service/blue 10
 
 Sending GET request: http://localhost:8000/service/blue
 200
@@ -88,7 +88,7 @@ Sending GET request: http://localhost:8000/service/blue
 Access serivce_red and check if 50% of requests to service_red are aborted with 503 HTTP status code. The following helper command allow you to send requests repeatedly (For example, send 10 requests to http://localhost:8000/service/red).
 
 ```sh
-$ ../helpers/send-requests.sh http://localhost:8000/service/red 10
+../helpers/send-requests.sh http://localhost:8000/service/red 10
 
 Sending GET request: http://localhost:8000/service/red
 503
@@ -101,7 +101,7 @@ Sending GET request: http://localhost:8000/service/red
 ## Stop & Cleanup
 
 ```sh
-$ docker-compose down --remove-orphans --rmi all
+docker-compose down --remove-orphans --rmi all
 ```
 
 ---

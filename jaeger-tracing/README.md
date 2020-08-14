@@ -1,9 +1,9 @@
 # Distributed Tracing: Jaeger Tracing
 
 ## Demo Overview
-This is a Jaeger tracing example built based on the [Envoy sandboxes (Jaeger Tracing)](https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/jaeger_tracing) that demonstrates Envoy’s [tracing](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/tracing#arch-overview-tracing) capabilities using [Jaeger](https://www.jaegertracing.io/) as the tracing provider.
+This is a Jaeger tracing example built based on the [Envoy sandboxes (Jaeger Tracing)](https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/jaeger_tracing) that demonstrates Envoy’s [tracing](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/observability/tracing) capabilities using [Jaeger](https://www.jaegertracing.io/) as the tracing provider.
 
-All services in the demo support not only `service` endpoint (which is basically the same as [HTTP Routing: Simple Match Routing](../httproute-simple-match/README.md)) but also `trace` endpoint. All traffic is routed by the `front envoy` to the `service containers`. Internally the traffic is routed to the service envoys, then the service envoys route the request to the flask app via the loopback address. All trace data is collected into a `Jaeger` container.
+All services in the demo support not only `service` endpoint (which is basically the same as [HTTP Routing: Simple Match Routing](../httproute-simple-match/README.md)) but also `trace` endpoint. All traffic is routed from the `front envoy` to the `service containers`. Internally the traffic is routed to the service envoys, then the service envoys route the request to the flask app via the loopback address. All trace data is collected into a `Jaeger` container.
 
 ![](../assets/demo-jaeger-tracing.png)
 
@@ -19,18 +19,44 @@ In accessing to `trace` endpoint, all traffic is routed to the service envoys wi
 ![](../assets/demo-jaeger-tracing-req-trace.png)
 
 #### Key configuration 1: The HTTP connection manager 
-All envoys are configured to collect request traces (e.g., http_connection_manager/config/tracing setup in front envoy).
+All envoys are configured to collect request traces (e.g., [tracing](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/filter/network/http_connection_manager/v2/http_connection_manager.proto#envoy-api-msg-config-filter-network-http-connection-manager-v2-httpconnectionmanager-tracing) in config.filter.network.http_connection_manager.v2.HttpConnectionManager in front envoy).
+```yaml
+static_resources:
+  listeners:
+  - address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 80  
+    traffic_direction: INBOUND
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
+          tracing:
+            provider:
+              name: envoy.tracers.zipkin
+              typed_config:
+                "@type": type.googleapis.com/envoy.config.trace.v2.ZipkinConfig
+                collector_cluster: jaeger
+                collector_endpoint: "/api/v2/spans"
+                shared_span_context: false
+                collector_endpoint_version: HTTP_JSON
 ```
-  - filters:
-    - name: envoy.http_connection_manager
-      config:
-        tracing:
-          operation_name: egress
-```
+
 > - The HTTP connection manager that handles the request must have the tracing object set. Please refer to [tracing object](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/filter/network/http_connection_manager/v2/http_connection_manager.proto#envoy-api-msg-config-filter-network-http-connection-manager-v2-httpconnectionmanager-tracing).
-> - `operation_name`: The span name will be derived from this field (`ingress` or `egress`)
->   - `ingress` (default): ⁣The HTTP listener is used for ingress/incoming requests.
->   - `egress`: The HTTP listener is used for egress/outgoing requests
+> - For the configuration for an HTTP tracer provider used by Envoy, see [config.trace.v2.Tracing.Http](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/trace/v2/http_tracer.proto#envoy-api-msg-config-trace-v2-tracing-http)
+>
+
+> Presence of the object defines whether the connection manager emits tracing data to the configured tracing provider. You configure `tracing driver` in `name` field. Here are 4 parameter options for `tracing driver` and `envoy.tracers.zipkin` is selected here:
+> - envoy.tracers.lightstep
+> - envoy.tracers.zipkin
+> - envoy.tracers.dynamic_ot
+> - envoy.tracers.datadog
+> - envoy.tracers.opencensus
+> - envoy.tracers.xray
+>
+> Parameters for Config parts in zipkin deiver are [here](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/trace/v2/zipkin.proto#envoy-api-msg-config-trace-v2-zipkinconfig)
 
 #### Key configuration 2: Spans propagation setup (Trace deiver setup)
 
@@ -38,6 +64,27 @@ All envoys in the demo are also configured to setup to propagate the spans gener
 
 ```YAML
 static_resources:
+  listeners:
+  ...
+  - address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 9000
+    traffic_direction: OUTBOUND
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
+          tracing:
+            provider:
+              name: envoy.tracers.zipkin
+              typed_config:
+                "@type": type.googleapis.com/envoy.config.trace.v2.ZipkinConfig
+                collector_cluster: jaeger
+                collector_endpoint: "/api/v2/spans"
+                shared_span_context: false
+                collector_endpoint_version: HTTP_JSON
 ...
   clusters:
   ...
@@ -45,25 +92,16 @@ static_resources:
     connect_timeout: 1s
     type: strict_dns
     lb_policy: round_robin
-    hosts:
-    - socket_address:
-        address: jaeger
-        port_value: 9411
-tracing:
-  http:
-    name: envoy.zipkin
-    config:
-      collector_cluster: jaeger
-      collector_endpoint: "/api/v1/spans"
-      shared_span_context: false
+    load_assignment:
+      cluster_name: jaeger
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: jaeger
+                port_value: 9411
 ```
-> Presence of the object defines whether the connection manager emits tracing data to the configured tracing provider. You configure `tracing driver` in `name` field. Here are 4 parameter options for `tracing driver` and `envoy.zipkin` is selected here:
-> - envoy.lightstep
-> - envoy.zipkin
-> - envoy.dynamic.ot
-> - envoy.tracers.datadog
-
-> Parameters for Config parts in zipkin deiver are [here](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/trace/v2/trace.proto#envoy-api-msg-config-trace-v2-zipkinconfig)
 
 #### Key configuration 3: Trace header propagation
 One of the most important benefits of tracing from Envoy is that it will take care of propagating the traces to the Jaeger service cluster. However, in order to fully take advantage of tracing, the application has to propagate trace headers that Envoy generates. The sample `trace header propagations` setup in servcie application code ([apps/service.py](../apps/service.py)) is this:
@@ -124,8 +162,8 @@ if __name__ == "__main__":
 
 ## Getting Started
 ```sh
-$ git clone https://github.com/yokawasa/envoy-proxy-demos.git
-$ cd envoy-proxy-demos/jaeger-tracing
+git clone https://github.com/yokawasa/envoy-proxy-demos.git
+cd envoy-proxy-demos/jaeger-tracing
 ```
 > [NOTICE] Before you run this demo, make sure that all demo containers in previous demo are stopped!
 
@@ -134,10 +172,10 @@ $ cd envoy-proxy-demos/jaeger-tracing
 ### Build and Run containers
 
 ```sh
-$ docker-compose up --build -d
+docker-compose up --build -d
 
 # check all services are up
-$ docker-compose ps --service
+docker-compose ps --service
 
 front-envoy
 service_blue
@@ -146,30 +184,29 @@ service_red
 jaeger
 
 # List containers
-$ docker-compose ps
+docker-compose ps
 
              Name                           Command               State                                                   Ports
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-jaeger-tracing_front-envoy_1     /usr/bin/dumb-init -- /bin ...   Up      10000/tcp, 0.0.0.0:8000->80/tcp, 0.0.0.0:8001->8001/tcp
-jaeger-tracing_jaeger_1          /go/bin/all-in-one-linux - ...   Up      14250/tcp, 14268/tcp, 0.0.0.0:16686->16686/tcp, 5775/udp, 5778/tcp, 6831/udp, 6832/udp,
-                                                                          0.0.0.0:9411->9411/tcp
-jaeger-tracing_service_blue_1    /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
-jaeger-tracing_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
-jaeger-tracing_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
+jaeger-tracing_front-envoy_1     /docker-entrypoint.sh /bin ...   Up      10000/tcp, 0.0.0.0:8000->8000/tcp, 0.0.0.0:8001->8001/tcp                                                     
+jaeger-tracing_jaeger_1          /go/bin/all-in-one-linux - ...   Up      14250/tcp, 14268/tcp, 0.0.0.0:16686->16686/tcp, 5775/udp, 5778/tcp, 6831/udp, 6832/udp, 0.0.0.0:9411->9411/tcp
+jaeger-tracing_service_blue_1    /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp                                                                                             
+jaeger-tracing_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp                                                                                             
+jaeger-tracing_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp   
 ```
 
 ### Access each services and check tracing results
 
 Access the following 3 endpoints for tracing test.
 ```
-$ curl -s -v http://localhost:8000/trace/blue
-$ curl -s -v http://localhost:8000/trace/green
-$ curl -s -v http://localhost:8000/trace/red
+curl -s -v http://localhost:8000/trace/blue
+curl -s -v http://localhost:8000/trace/green
+curl -s -v http://localhost:8000/trace/red
 ```
 
 For example, when you access `/trace/blue`, you'll see the following output
 ```sh
-$ curl -s -v http://localhost:8000/trace/blue
+curl -s -v http://localhost:8000/trace/blue
 
 *   Trying ::1...
 * TCP_NODELAY set
@@ -195,7 +232,7 @@ Hello from blue (hostname: 9f71b1513720 resolvedhostname:172.21.0.5)
 Trace data would automatically have been generated and pushed to Jaeger via Envoy. In this part, check the Jaeger UI to see how the Jaeger visualize all the trace data collected. Here is a Jaeger UI url:
 
 ```
-$ open http://localhost:16686
+open http://localhost:16686
 ```
 
 ![](../assets/jaeger-ui.png)
@@ -211,7 +248,7 @@ You'll come up with Jager UI page like above, then search each traces. Here are 
 ## Stop & Cleanup
 
 ```sh
-$ docker-compose down --remove-orphans --rmi all
+docker-compose down --remove-orphans --rmi all
 ```
 
 ---
