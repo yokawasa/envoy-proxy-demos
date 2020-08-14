@@ -1,7 +1,7 @@
 # Distributed Tracing: Zipkin Tracing
 
 ## Demo Overview
-This is a Zipkin tracing example built based on the [Envoy sandboxes (Zipkin Tracing)](https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/zipkin_tracing) that demonstrates Envoy’s [tracing](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/tracing#arch-overview-tracing) capabilities using [Zipkin](https://zipkin.io/) as the tracing provider.
+This is a Zipkin tracing example built based on the [Envoy sandboxes (Zipkin Tracing)](https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/zipkin_tracing) that demonstrates Envoy’s [tracing](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/observability/tracing) capabilities using [Zipkin](https://zipkin.io/) as the tracing provider.
 
 All services in the demo support not only `service` endpoint (which is basically the same as [HTTP Routing: Simple Match Routing](../httproute-simple-match/README.md)) but also `trace` endpoint. All traffic is routed by the `front envoy` to the `service containers`. Internally the traffic is routed to the service envoys, then the service envoys route the request to the flask app via the loopback address. All trace data is collected into a `Zipkin` container.
 
@@ -19,18 +19,45 @@ In accessing to `trace` endpoint, all traffic is routed to the service envoys wi
 ![](../assets/demo-zipkin-tracing-req-trace.png)
 
 #### Key configuration 1: The HTTP connection manager 
-All envoys are configured to collect request traces (e.g., http_connection_manager/config/tracing setup in front envoy).
+All envoys are configured to collect request traces (e.g., [tracing](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/filter/network/http_connection_manager/v2/http_connection_manager.proto#envoy-api-msg-config-filter-network-http-connection-manager-v2-httpconnectionmanager-tracing) in config.filter.network.http_connection_manager.v2.HttpConnectionManager in front envoy).
+
+```yaml
+static_resources:
+  listeners:
+  - address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 8000
+    traffic_direction: OUTBOUND        
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
+          generate_request_id: true
+          tracing:
+            provider:
+              name: envoy.tracers.zipkin
+              typed_config:
+                "@type": type.googleapis.com/envoy.config.trace.v2.ZipkinConfig
+                collector_cluster: zipkin
+                collector_endpoint: "/api/v2/spans"
+                collector_endpoint_version: HTTP_JSON
 ```
-  - filters:
-    - name: envoy.http_connection_manager
-      config:
-        tracing:
-          operation_name: egress
-```
+
 > - The HTTP connection manager that handles the request must have the tracing object set. Please refer to [tracing object](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/filter/network/http_connection_manager/v2/http_connection_manager.proto#envoy-api-msg-config-filter-network-http-connection-manager-v2-httpconnectionmanager-tracing).
-> - `operation_name`: The span name will be derived from this field (`ingress` or `egress`)
->   - `ingress` (default): ⁣The HTTP listener is used for ingress/incoming requests.
->   - `egress`: The HTTP listener is used for egress/outgoing requests
+> - For the configuration for an HTTP tracer provider used by Envoy, see [config.trace.v2.Tracing.Http](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/trace/v2/http_tracer.proto#envoy-api-msg-config-trace-v2-tracing-http)
+>
+
+> Presence of the object defines whether the connection manager emits tracing data to the configured tracing provider. You configure `tracing driver` in `name` field. Here are 4 parameter options for `tracing driver` and `envoy.tracers.zipkin` is selected here:
+> - envoy.tracers.lightstep
+> - envoy.tracers.zipkin
+> - envoy.tracers.dynamic_ot
+> - envoy.tracers.datadog
+> - envoy.tracers.opencensus
+> - envoy.tracers.xray
+>
+> Parameters for Config parts in zipkin deiver are [here](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/trace/v2/zipkin.proto#envoy-api-msg-config-trace-v2-zipkinconfig)
 
 #### Key configuration 2: Spans propagation setup (Trace deiver setup)
 
@@ -38,6 +65,27 @@ All envoys in the demo are also configured to setup to propagate the spans gener
 
 ```YAML
 static_resources:
+  listeners:
+  ...
+  - address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 9000
+    traffic_direction: OUTBOUND
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
+          tracing:
+            provider:
+              name: envoy.tracers.zipkin
+              typed_config:
+                "@type": type.googleapis.com/envoy.config.trace.v2.ZipkinConfig
+                collector_cluster: jaeger
+                collector_endpoint: "/api/v2/spans"
+                shared_span_context: false
+                collector_endpoint_version: HTTP_JSON
 ...
   clusters:
   ...
@@ -45,24 +93,16 @@ static_resources:
     connect_timeout: 1s
     type: strict_dns
     lb_policy: round_robin
-    hosts:
-    - socket_address:
-        address: zipkin
-        port_value: 9411
-tracing:
-  http:
-    name: envoy.zipkin
-    config:
-      collector_cluster: zipkin
-      collector_endpoint: "/api/v1/spans"
+    load_assignment:
+      cluster_name: zipkin
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: zipkin
+                port_value: 9411
 ```
-> Presence of the object defines whether the connection manager emits tracing data to the configured tracing provider. You configure `tracing driver` in `name` field. Here are 4 parameter options for `tracing driver` and `envoy.zipkin` is selected here:
-> - envoy.lightstep
-> - envoy.zipkin
-> - envoy.dynamic.ot
-> - envoy.tracers.datadog
-
-> Parameters for Config parts in zipkin deiver are [here](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/trace/v2/trace.proto#envoy-api-msg-config-trace-v2-zipkinconfig)
 
 #### Key configuration 3: Trace header propagation
 One of the most important benefits of tracing from Envoy is that it will take care of propagating the traces to the Zipkin service cluster. However, in order to fully take advantage of tracing, the application has to propagate trace headers that Envoy generates. The sample `trace header propagations` setup in servcie application code ([apps/service.py](../apps/service.py)) is this:
@@ -133,10 +173,10 @@ $ cd envoy-proxy-demos/zipkin-tracing
 ### Build and Run containers
 
 ```sh
-$ docker-compose up --build -d
+docker-compose up --build -d
 
 # check all services are up
-$ docker-compose ps --service
+docker-compose ps --service
 
 front-envoy
 service_blue
@@ -145,30 +185,29 @@ service_red
 zipkin
 
 # List containers
-$ docker-compose ps
+docker-compose ps
 
              Name                           Command               State                            Ports
 ---------------------------------------------------------------------------------------------------------------------------------
-zipkin-tracing_front-envoy_1     /usr/bin/dumb-init -- /bin ...   Up      10000/tcp, 0.0.0.0:8000->80/tcp, 0.0.0.0:8001->8001/tcp
-zipkin-tracing_service_blue_1    /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
-zipkin-tracing_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
-zipkin-tracing_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up      10000/tcp, 80/tcp
-zipkin-tracing_zipkin_1          /bin/bash -c test -n "$STO ...   Up      9410/tcp, 0.0.0.0:9411->9411/tcp
-  
+zipkin-tracing_front-envoy_1     /docker-entrypoint.sh /bin ...   Up                      10000/tcp, 0.0.0.0:8000->8000/tcp, 0.0.0.0:8001->8001/tcp
+zipkin-tracing_service_blue_1    /bin/sh -c /usr/local/bin/ ...   Up                      10000/tcp, 80/tcp                                        
+zipkin-tracing_service_green_1   /bin/sh -c /usr/local/bin/ ...   Up                      10000/tcp, 80/tcp                                        
+zipkin-tracing_service_red_1     /bin/sh -c /usr/local/bin/ ...   Up                      10000/tcp, 80/tcp                                        
+zipkin-tracing_zipkin_1          /bin/sh -c /zipkin/run.sh        Up (health: starting)   9410/tcp, 0.0.0.0:9411->9411/tcp  
 ```
 
 ### Access each services and check tracing results
 
 Access the following 3 endpoints for tracing test.
 ```
-$ curl -s -v http://localhost:8000/trace/blue
-$ curl -s -v http://localhost:8000/trace/green
-$ curl -s -v http://localhost:8000/trace/red
+curl -s -v http://localhost:8000/trace/blue
+curl -s -v http://localhost:8000/trace/green
+curl -s -v http://localhost:8000/trace/red
 ```
 
 For example, when you access `/trace/blue`, you'll see the following output
 ```sh
-$ curl -v http://localhost:8000/trace/blue
+curl -v http://localhost:8000/trace/blue
 
 *   Trying ::1...
 * TCP_NODELAY set
@@ -194,7 +233,7 @@ Hello from blue (hostname: 7400d4d450cd resolvedhostname:172.22.0.3)
 Trace data would automatically have been generated and pushed to Zipkin via Envoy. In this part, check the Zipkin UI to see how the Zipkin visualize all the trace data collected. Here is a Zipkin UI url:
 
 ```
-$ open http://localhost:9411
+open http://localhost:9411
 ```
 
 ![](../assets/zipkin-ui.png)
@@ -209,7 +248,7 @@ You'll come up with Zipkin UI page like above, then search each traces. Here are
 ## Stop & Cleanup
 
 ```sh
-$ docker-compose down --remove-orphans --rmi all
+docker-compose down --remove-orphans --rmi all
 ```
 
 ---

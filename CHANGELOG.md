@@ -2,7 +2,16 @@
 
 ## v2.0.0 (envoy api v2 based demo apps)
 
-WIP
+Prominent changes from v1 based demo app are:
+
+- Changed general port for front proxy from 80 to 8000
+- Changed docker compose version from 2 to 3.7 (see [Compose file version 3 reference](https://docs.docker.com/compose/compose-file/))
+- HTTP Connection Manager API Change: 
+  - v1 API: envoy.http_connection_manager in v1 API
+  - v2 API: [envoy.filters.network.http_connection_manager](https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/filter/network/http_connection_manager/v2/http_connection_manager.proto)
+- Tracking config for both Jaeger and Zipkin
+  - endpoint: /api/v1/spans to /api/v2/spans
+- Stopped using `envoy.api.v2.route.RouteMatch.regex`, deprecated option
 
 ## v1.0.0 (envoy api v1 based demo apps)
 
